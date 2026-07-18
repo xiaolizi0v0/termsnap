@@ -56,8 +56,19 @@ jobs:
         if: runner.os != 'Linux'
         run: python -c "from termsnap.__main__ import main; print('import ok')"
 
-      - name: PyInstaller 打包
-        run: pyinstaller --noconfirm --onefile --windowed --name termsnap run.py
+      - name: 生成 logo.ico（Windows：exe 内嵌图标 + MSI 程序列表图标）
+        if: runner.os == 'Windows'
+        run: |
+          $env:QT_QPA_PLATFORM = "minimal"
+          python -c "from PySide6.QtGui import QGuiApplication, QImage; app = QGuiApplication([]); QImage('logo.png').scaled(256, 256).save('logo.ico')"
+
+      - name: PyInstaller 打包（Windows：内嵌图标 + 捆绑 logo.png）
+        if: runner.os == 'Windows'
+        run: pyinstaller --noconfirm --onefile --windowed --name termsnap --icon logo.ico --add-data "logo.png;." run.py
+
+      - name: PyInstaller 打包（macOS / Linux：捆绑 logo.png）
+        if: runner.os != 'Windows'
+        run: pyinstaller --noconfirm --onefile --windowed --name termsnap --add-data "logo.png:." run.py
 
       - name: 制作产物（Windows：绿色 exe + MSI 安装包）
         if: runner.os == 'Windows'
@@ -65,8 +76,6 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force out | Out-Null
           Copy-Item dist/termsnap.exe "out/termsnap-${{ matrix.suffix }}.exe"
-          $env:QT_QPA_PLATFORM = "minimal"
-          python -c "from PySide6.QtGui import QGuiApplication, QImage; app = QGuiApplication([]); QImage('logo.png').scaled(256, 256).save('logo.ico')"
           choco install wixtoolset --no-progress -y
           $wix = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
           & "$wix\candle.exe" -dVersion="${{ env.VERSION }}" installer\termsnap.wxs -out termsnap.wixobj

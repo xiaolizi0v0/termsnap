@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QUrl, Signal
@@ -31,7 +32,14 @@ from .selector import RegionSelector
 from .settings_dialog import SettingsDialog
 
 
-LOGO_PATH = Path(__file__).resolve().parent.parent / "logo.png"
+def _logo_path() -> Path:
+    """logo.png 位置：PyInstaller 打包后在捆绑目录（--add-data 传入），
+    开发运行时在仓库根目录。"""
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+    return base / "logo.png"
+
+
+LOGO_PATH = _logo_path()
 
 
 def load_icon() -> QIcon:

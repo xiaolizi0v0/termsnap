@@ -2,7 +2,7 @@
   <img src="logo.png" alt="TermSnap Logo" width="180">
 </p>
 
-<h1 align="center">TermSnap v0.1.0</h1>
+<h1 align="center">TermSnap v0.1.1</h1>
 
 ---
 
