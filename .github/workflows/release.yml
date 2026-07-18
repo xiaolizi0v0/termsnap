@@ -71,6 +71,7 @@ jobs:
           $wix = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
           & "$wix\candle.exe" -dVersion="${{ env.VERSION }}" installer\termsnap.wxs -out termsnap.wixobj
           & "$wix\light.exe" termsnap.wixobj -out "out/termsnap-${{ matrix.suffix }}.msi"
+          Remove-Item out\*.wixpdb -ErrorAction SilentlyContinue
           Get-ChildItem out
 
       - name: 制作产物（macOS：zip + DMG）
