@@ -28,6 +28,22 @@
 截图自动保存到你设置的目录 → 文件路径自动写入剪贴板，
 回到终端直接 `Ctrl+V` / `Ctrl+Shift+V` 即可粘贴路径。
 
+## 下载 Download
+
+推送 `v*` 标签后，GitHub Actions 会自动构建并发布到
+[Releases](https://github.com/xiaolizi0v0/termsnap/releases)：
+
+| 平台 | 安装包 | 绿色版 |
+| --- | --- | --- |
+| Windows | `termsnap-windows-amd64.msi` | `termsnap-windows-amd64.exe` |
+| macOS (Apple Silicon) | `termsnap-macos-arm64.dmg` | `termsnap-macos-arm64.zip` |
+| Linux | `termsnap-linux-amd64.deb`（`sudo dpkg -i` 安装） | `termsnap-linux-amd64` |
+
+- macOS 未签名：首次打开请右键 → 打开，并授予「辅助功能」与「屏幕录制」权限
+- Linux 需要 X11 会话与系统托盘（Wayland 不支持全局热键）
+
+手动触发：Actions 页面选择 **Release** → Run workflow（只构建产物，不发布）。
+
 ## 功能 Features
 
 - 全局快捷键触发选区截图（默认 `Ctrl+Alt+Shift+A`，可在设置中修改）

@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"] # 推送 v1.0.0 这类标签时触发构建并发布
+  workflow_dispatch: # 手动触发只构建产物，不发布
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            suffix: windows-amd64
+          - os: macos-latest
+            suffix: macos-arm64
+          - os: ubuntu-latest
+            suffix: linux-amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 计算版本号（取标签名，手动触发时为 0.0.0）
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then V="${GITHUB_REF_NAME#v}"; else V="0.0.0"; fi
+          IFS='.' read -ra P <<< "$V"
+          while [ ${#P[@]} -lt 3 ]; do P+=(0); done
+          echo "VERSION=${P[0]}.${P[1]}.${P[2]}" >> "$GITHUB_ENV"
+          echo "version = ${P[0]}.${P[1]}.${P[2]}"
+
+      - name: 安装 Linux 系统依赖（Qt 运行库）
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libxkbcommon-x11-0 libdbus-1-3 libfontconfig1 libglib2.0-0
+
+      - name: 安装 Python 依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: 导入自检
+        run: python -c "from termsnap.__main__ import main; print('import ok')"
+
+      - name: PyInstaller 打包
+        run: pyinstaller --noconfirm --onefile --windowed --name termsnap run.py
+
+      - name: 制作产物（Windows：绿色 exe + MSI 安装包）
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item dist/termsnap.exe "out/termsnap-${{ matrix.suffix }}.exe"
+          $env:QT_QPA_PLATFORM = "minimal"
+          python -c "from PySide6.QtGui import QGuiApplication, QImage; $a = QGuiApplication([]); QImage('logo.png').scaled(256, 256).save('logo.ico')"
+          choco install wixtoolset --no-progress -y
+          $wix = "C:\Program Files (x86)\WiX Toolset v3.14\bin"
+          & "$wix\candle.exe" -dVersion="${{ env.VERSION }}" installer\termsnap.wxs -out termsnap.wixobj
+          & "$wix\light.exe" termsnap.wixobj -out "out/termsnap-${{ matrix.suffix }}.msi"
+          Get-ChildItem out
+
+      - name: 制作产物（macOS：zip + DMG）
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p out
+          ditto -c -k --sequesterRsrc --keepParent dist/termsnap.app "out/termsnap-${{ matrix.suffix }}.zip"
+          hdiutil create -volname TermSnap -srcfolder dist/termsnap.app -ov -format UDZO "out/termsnap-${{ matrix.suffix }}.dmg"
+          ls -lh out
+
+      - name: 制作产物（Linux：二进制 + DEB）
+        if: runner.os == 'Linux'
+        run: |
+          set -e
+          mkdir -p out pkg/DEBIAN pkg/usr/bin pkg/usr/share/applications pkg/usr/share/icons/hicolor/256x256/apps
+          cp dist/termsnap "out/termsnap-${{ matrix.suffix }}"
+          cp dist/termsnap pkg/usr/bin/termsnap
+          cp logo.png pkg/usr/share/icons/hicolor/256x256/apps/termsnap.png
+          printf '%s\n' \
+            "Package: termsnap" \
+            "Version: ${{ env.VERSION }}" \
+            "Section: utils" \
+            "Priority: optional" \
+            "Architecture: amd64" \
+            "Maintainer: xiaolizi0v0" \
+            "Description: Hotkey-driven region screenshot tool for terminal users" \
+            > pkg/DEBIAN/control
+          printf '%s\n' \
+            "[Desktop Entry]" \
+            "Name=TermSnap" \
+            "Comment=Hotkey-driven region screenshot tool" \
+            "Exec=termsnap" \
+            "Icon=termsnap" \
+            "Type=Application" \
+            "Categories=Utility;" \
+            "Terminal=false" \
+            > pkg/usr/share/applications/termsnap.desktop
+          dpkg-deb --build pkg "out/termsnap-${{ matrix.suffix }}.deb"
+          ls -lh out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: termsnap-${{ matrix.suffix }}
+          path: out/
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/') # 仅打标签时发布
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          body: |
+            ## 安装说明
+
+            | 平台 | 安装包 | 绿色版 |
+            | --- | --- | --- |
+            | Windows | `termsnap-windows-amd64.msi` | `termsnap-windows-amd64.exe` |
+            | macOS (Apple Silicon) | `termsnap-macos-arm64.dmg` | `termsnap-macos-arm64.zip` |
+            | Linux | `termsnap-linux-amd64.deb`（`sudo dpkg -i` 安装） | `termsnap-linux-amd64` |
+
+            - macOS 未签名：首次打开请右键 → 打开，并授予「辅助功能」与「屏幕录制」权限
+            - Linux 需要 X11 会话与系统托盘（Wayland 不支持全局热键）

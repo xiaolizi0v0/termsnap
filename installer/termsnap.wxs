@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TermSnap MSI 安装包模板（WiX v3）。Version 由 CI 通过 candle -dVersion= 传入（x.y.z）。
+     打包内容：dist\termsnap.exe → Program Files\TermSnap，并创建开始菜单快捷方式。 -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="TermSnap"
+           Language="1033"
+           Version="$(var.Version)"
+           Manufacturer="xiaolizi0v0"
+           UpgradeCode="c0d7ccc0-9231-40db-b217-44a7522e24b5">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"
+             Platform="x64" Description="TermSnap - hotkey-driven region screenshot tool"/>
+    <MajorUpgrade DowngradeErrorMessage="A newer version of TermSnap is already installed."/>
+    <MediaTemplate EmbedCab="yes"/>
+
+    <!-- “添加/删除程序”里显示的图标；CI 打包前由 logo.png 生成 logo.ico -->
+    <Icon Id="icon.ico" SourceFile="logo.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico"/>
+
+    <Feature Id="Main" Title="TermSnap" Level="1">
+      <ComponentRef Id="MainExe"/>
+      <ComponentRef Id="StartMenuShortcut"/>
+    </Feature>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="TermSnap">
+          <Component Id="MainExe" Guid="5c9f174f-e9c8-405e-b0db-d5bfc0faa99c">
+            <File Id="termsnap.exe" Source="dist\termsnap.exe" KeyPath="yes"/>
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="AppProgramsFolder" Name="TermSnap"/>
+      </Directory>
+    </Directory>
+
+    <Component Id="StartMenuShortcut" Guid="bd1224ff-3d45-4634-b4b3-72ccc67570df" Directory="AppProgramsFolder">
+      <Shortcut Id="StartMenuTermsnap" Name="TermSnap"
+                Target="[INSTALLFOLDER]termsnap.exe" WorkingDirectory="INSTALLFOLDER"/>
+      <RemoveFolder Id="RemoveAppProgramsFolder" On="uninstall"/>
+      <RegistryValue Root="HKCU" Key="Software\TermSnap" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+    </Component>
+  </Product>
+</Wix>
