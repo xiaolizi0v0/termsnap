@@ -25,7 +25,7 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLFOLDER" Name="TermSnap">
-          <Component Id="MainExe" Guid="5c9f174f-e9c8-405e-b0db-d5bfc0faa99c">
+          <Component Id="MainExe" Guid="5c9f174f-e9c8-405e-b0db-d5bfc0faa99c" Win64="yes">
             <File Id="termsnap.exe" Source="dist\termsnap.exe" KeyPath="yes"/>
           </Component>
         </Directory>
