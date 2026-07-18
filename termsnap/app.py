@@ -31,8 +31,20 @@ from .selector import RegionSelector
 from .settings_dialog import SettingsDialog
 
 
+LOGO_PATH = Path(__file__).resolve().parent.parent / "logo.png"
+
+
+def load_icon() -> QIcon:
+    """应用图标：优先用仓库根目录的 logo.png，缺失时用程序化兜底图标。"""
+    if LOGO_PATH.is_file():
+        icon = QIcon(str(LOGO_PATH))
+        if not icon.isNull():
+            return icon
+    return make_icon()
+
+
 def make_icon() -> QIcon:
-    """程序化生成托盘图标，避免附带资源文件。"""
+    """程序化生成的兜底图标，避免附带资源文件。"""
     pm = QPixmap(64, 64)
     pm.fill(Qt.transparent)
     p = QPainter(pm)
@@ -64,7 +76,7 @@ class TermsnapApp(QObject):
 
         self._hotkey_triggered.connect(self.start_capture)
 
-        self._tray = QSystemTrayIcon(make_icon(), parent=self)
+        self._tray = QSystemTrayIcon(load_icon(), parent=self)
         self._update_tooltip()
         menu = QMenu()
         act_capture = menu.addAction("立即截图")

@@ -1,9 +1,31 @@
-# termsnap
+<p align="center">
+  <img src="logo.png" alt="TermSnap Logo" width="180">
+</p>
 
-EN: A hotkey-driven region screenshot tool for terminal users — capture, auto-save, and paste the file path instantly.
-中文：为终端用户打造的快捷键选区截图工具 —— 截图、自动保存、一键粘贴文件路径。
+<h1 align="center">TermSnap v0.1.0</h1>
 
-按下全局快捷键 → 拖拽框选区域 → 截图自动保存到你设置的目录 → 文件路径自动写入剪贴板，
+---
+
+<p align="center">
+  <img src="https://img.shields.io/github/languages/code-size/xiaolizi0v0/termsnap" alt="code size">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-blue" alt="Python">
+  <img src="https://img.shields.io/badge/PySide6-6.6%2B-green" alt="PySide6">
+  <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="platform">
+  <img src="https://img.shields.io/github/last-commit/xiaolizi0v0/termsnap" alt="last commit">
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Created-26.07.18-blue" alt="Created">
+  <img src="https://img.shields.io/badge/Author-xiaolizi0v0-orange" alt="Author">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+</p>
+
+---
+
+**TermSnap** — 为终端用户打造的快捷键选区截图工具：截图、标注、自动保存、一键粘贴文件路径。
+*A hotkey-driven region screenshot tool for terminal users — capture, annotate, auto-save, and paste the file path instantly.*
+
+按下全局快捷键 → 拖拽框选区域 → 用工具栏标注（矩形/椭圆/箭头/画笔/文字/马赛克）→
+截图自动保存到你设置的目录 → 文件路径自动写入剪贴板，
 回到终端直接 `Ctrl+V` / `Ctrl+Shift+V` 即可粘贴路径。
 
 ## 功能 Features
@@ -50,14 +72,14 @@ python -m venv .venv
 ```json
 {
   "save_dir": "C:\\Users\\you\\Pictures\\termsnap",
-  "hotkey": "ctrl+alt+a",
+  "hotkey": "ctrl+alt+shift+a",
   "filename_pattern": "termsnap_{timestamp}",
   "show_notification": true
 }
 ```
 
 - `save_dir`：截图保存地址（在托盘「设置…」里修改）
-- `hotkey`：全局快捷键，小写加号分隔，如 `ctrl+alt+a`、`printscreen`、`ctrl+shift+f5`
+- `hotkey`：全局快捷键，小写加号分隔，如 `ctrl+alt+shift+a`、`printscreen`、`ctrl+shift+f5`
 - `filename_pattern`：文件名模式，支持 `{timestamp}` / `{date}` / `{time}` 占位符
 - `show_notification`：截图完成后是否弹出系统通知
 
